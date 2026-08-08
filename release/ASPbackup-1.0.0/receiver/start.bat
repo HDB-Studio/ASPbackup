@@ -5,7 +5,7 @@ title ASPbackup Backup Receiver
 
 :: Get script directory
 set SCRIPT_DIR=%~dp0
-set JAR_FILE=%SCRIPT_DIR%ASPbackup-receiver.jar
+set JAR_FILE=%SCRIPT_DIR%ASPbackup-receiver-1.0.0.jar
 
 :: Check if jar exists
 if not exist "%JAR_FILE%" (

@@ -2,7 +2,7 @@
 # ASPbackup Backup Receiver - Startup Script (Linux/macOS)
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-JAR_FILE="$SCRIPT_DIR/ASPbackup-receiver.jar"
+JAR_FILE="$SCRIPT_DIR/ASPbackup-receiver-1.0.0.jar"
 
 # Check if jar exists
 if [ ! -f "$JAR_FILE" ]; then
