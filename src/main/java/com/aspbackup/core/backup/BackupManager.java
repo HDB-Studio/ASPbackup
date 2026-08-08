@@ -8,6 +8,7 @@ import com.aspbackup.core.backup.source.DirectoryBackupSource;
 import com.aspbackup.core.backup.source.FileEntry;
 import com.aspbackup.core.backup.target.BackupTarget;
 import com.aspbackup.core.backup.target.LocalBackupTarget;
+import com.aspbackup.core.backup.target.RemoteBackupTarget;
 import com.aspbackup.core.config.model.BackupConfig;
 
 import java.io.*;
@@ -128,7 +129,7 @@ public class BackupManager {
             BackupConfig config = plugin.getConfigManager().getBackupConfig();
 
             // 阶段1：查找目标
-            BackupTarget target = findTarget(task.getTargetId());
+            BackupTarget target = findTarget(task);
             if (target == null) {
                 failTask(task, "未找到备份目标：" + task.getTargetId());
                 return;
@@ -274,7 +275,8 @@ public class BackupManager {
         return plugin.getServer().getWorldContainer().toPath().toAbsolutePath().normalize();
     }
 
-    private BackupTarget findTarget(String targetId) {
+    private BackupTarget findTarget(BackupTask task) {
+        String targetId = task.getTargetId();
         for (var tgt : plugin.getConfigManager().getBackupConfig().getTargets()) {
             if (tgt.getId().equals(targetId)) {
                 return switch (tgt.getType().toUpperCase()) {
@@ -287,8 +289,28 @@ public class BackupManager {
                         yield new LocalBackupTarget(tgt.getId(), nasPath, tgt.getRetentionCount(), plugin.getLogger());
                     }
                     case "REMOTE" -> {
-                        plugin.getLogger().warning("远端目标尚未实现（阶段6）");
-                        yield null;
+                        // 从传输管理器中获取节点
+                        var nodes = new ArrayList<>(plugin.getTransferManager().getNodes());
+                        if (nodes.isEmpty()) {
+                            plugin.getLogger().warning("没有可用的传输节点，无法进行远端备份");
+                            yield null;
+                        }
+                        // 使用负载均衡选择节点
+                        var selectedNode = plugin.getTransferManager().getLoadBalancer().selectNode(nodes);
+                        if (selectedNode == null) {
+                            plugin.getLogger().warning("负载均衡器未选择到可用节点");
+                            yield null;
+                        }
+                        var transferConfig = plugin.getConfigManager().getTransferConfig();
+                        yield new RemoteBackupTarget(
+                                tgt.getId(), task.getTaskId(), selectedNode,
+                                plugin.getTransferManager().getConnectionPool(),
+                                transferConfig.getChunkSizeKb(),
+                                transferConfig.getConnectTimeoutMs(),
+                                transferConfig.getReadTimeoutMs(),
+                                transferConfig.getRetryCount(),
+                                plugin.getLogger()
+                        );
                     }
                     default -> {
                         plugin.getLogger().warning("未知目标类型：" + tgt.getType());

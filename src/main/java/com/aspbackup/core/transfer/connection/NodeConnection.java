@@ -41,7 +41,12 @@ public class NodeConnection implements Closeable {
                 node.getId(), node.getAuthToken(), 0x07); // all capabilities
         packet.write(out);
         out.flush();
-        // Read response (simplified - full implementation in Phase 6)
+
+        // 读取握手 ACK（4 字节 int，0 = 成功）
+        int ack = in.readInt();
+        if (ack != 0) {
+            throw new IOException("握手失败，接收端返回错误码：" + ack);
+        }
         return true;
     }
 

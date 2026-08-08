@@ -24,7 +24,7 @@ public class TransferNode {
         this.authToken = config.getAuthToken();
         this.weight = config.getWeight();
         this.enabled = config.isEnabled();
-        this.online = false;
+        this.online = true; // 默认乐观在线，连线失败时设为 false
         this.bytesTransferred = 0;
         this.lastSeen = 0;
     }
