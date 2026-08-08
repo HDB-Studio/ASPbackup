@@ -23,6 +23,7 @@ public class DirectoryBackupSource implements BackupSource {
 
     public DirectoryBackupSource(Path rootPath, String name,
                                   BackupConfig.FileFilterDef globalFilter,
+                                  List<String> extraIncludes,
                                   List<String> extraExcludes, int maxDepth,
                                   Logger logger) {
         this.rootPath = rootPath;
@@ -30,8 +31,14 @@ public class DirectoryBackupSource implements BackupSource {
         this.extraExcludes = extraExcludes != null ? extraExcludes : List.of();
         this.logger = logger;
 
+        // 合并全局 include 和来源特定 include
+        List<String> mergedIncludes = new ArrayList<>(globalFilter.getInclude());
+        if (extraIncludes != null) {
+            mergedIncludes.addAll(extraIncludes);
+        }
+
         this.collector = new FileCollector(
-                globalFilter.getInclude(),
+                mergedIncludes,
                 globalFilter.getExclude(),
                 globalFilter.getMinSizeBytes(),
                 globalFilter.getMaxSizeBytes(),

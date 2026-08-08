@@ -60,6 +60,7 @@ public class BackupConfig {
     public static class SourceDef {
         private String path;
         private String name;
+        private List<String> include = new ArrayList<>();
         private List<String> exclude = new ArrayList<>();
         private int maxDepth = 100;
 
@@ -67,6 +68,8 @@ public class BackupConfig {
         public void setPath(String path) { this.path = path; }
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
+        public List<String> getInclude() { return include; }
+        public void setInclude(List<String> include) { this.include = include; }
         public List<String> getExclude() { return exclude; }
         public void setExclude(List<String> exclude) { this.exclude = exclude; }
         public int getMaxDepth() { return maxDepth; }

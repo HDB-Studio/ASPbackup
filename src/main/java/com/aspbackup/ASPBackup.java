@@ -32,17 +32,17 @@ public final class ASPBackup extends JavaPlugin {
     public void onEnable() {
         instance = this;
 
-        // 初始化日志系统
-        backupLogger = new BackupLogger(this);
-
         getLogger().info("============================================");
         getLogger().info("  ASPbackup v" + getDescription().getVersion() + " 正在启动...");
         getLogger().info("============================================");
 
         try {
-            // 初始化配置
+            // 初始化配置（必须在日志系统之前，因为日志系统依赖配置）
             configManager = new ConfigManager(this);
             configManager.load();
+
+            // 初始化日志系统
+            backupLogger = new BackupLogger(this);
 
             // 初始化备份管理器
             backupManager = new BackupManager(this);

@@ -25,6 +25,8 @@ public class ASPBackupCommand implements CommandExecutor, TabCompleter {
 
         // Register all subcommands
         register(new HelpCommand(this));
+        register(new AboutCommand(plugin));
+        register(new InfoCommand(plugin));
         register(new ReloadCommand(plugin));
         register(new StartCommand(plugin));
         register(new StopCommand(plugin));

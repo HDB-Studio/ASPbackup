@@ -98,6 +98,12 @@ public class ConfigManager {
                     BackupConfig.SourceDef src = new BackupConfig.SourceDef();
                     src.setPath(String.valueOf(map.getOrDefault("path", "")));
                     src.setName(String.valueOf(map.getOrDefault("name", "")));
+                    Object inc = map.get("include");
+                    if (inc instanceof List) {
+                        @SuppressWarnings("unchecked")
+                        var incList = (List<String>) inc;
+                        src.setInclude(incList);
+                    }
                     Object exc = map.get("exclude");
                     if (exc instanceof List) {
                         @SuppressWarnings("unchecked")
