@@ -1,0 +1,59 @@
+name: ASPbackup
+version: ${project.version}
+main: com.aspbackup.ASPBackup
+api-version: "1.20"
+description: Advanced backup system with distributed transfer support for Minecraft servers
+author: HDB-Studio
+website: https://github.com/HDB-Studio/ASPbackup
+
+softdepend: [Multiverse-Core, Essentials, LuckPerms]
+
+commands:
+  aspbackup:
+    description: Main command for ASPbackup backup system
+    usage: /<command> <subcommand> [args...]
+    aliases: [aspb, backup]
+    permission: aspbackup.command
+    permission-message: "&cYou do not have permission to use this command."
+
+permissions:
+  aspbackup.command:
+    description: Access to /aspbackup command
+    default: op
+  aspbackup.start:
+    description: Manually start a backup operation
+    default: op
+  aspbackup.stop:
+    description: Stop an active backup operation
+    default: op
+  aspbackup.status:
+    description: View backup operation status
+    default: op
+  aspbackup.resume:
+    description: Resume an interrupted backup
+    default: op
+  aspbackup.list:
+    description: List backup history
+    default: op
+  aspbackup.nodes:
+    description: Manage distributed transfer nodes
+    default: op
+  aspbackup.verify:
+    description: Verify backup integrity
+    default: op
+  aspbackup.reload:
+    description: Reload plugin configuration
+    default: op
+  aspbackup.*:
+    description: Wildcard permission for all ASPbackup features
+    default: op
+    children:
+      aspbackup.command: true
+      aspbackup.start: true
+      aspbackup.stop: true
+      aspbackup.status: true
+      aspbackup.resume: true
+      aspbackup.list: true
+      aspbackup.nodes: true
+      aspbackup.verify: true
+      aspbackup.reload: true

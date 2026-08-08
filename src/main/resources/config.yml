@@ -1,0 +1,162 @@
+# ============================================================
+# ASPbackup Configuration
+# ============================================================
+
+# --- Backup Settings ---
+backup:
+  # Auto-backup when the server starts
+  auto-on-start: true
+  # Auto-backup when the server stops (via /stop command)
+  auto-on-shutdown: true
+  # Delay in seconds before start backup begins (allows server to stabilize)
+  start-delay-seconds: 30
+  # Temporary directory for staging backups before transfer
+  temp-directory: "plugins/ASPbackup/temp"
+  # Maximum individual backup size in MB (0 = no limit)
+  max-backup-size-mb: 0
+  # Verify backup integrity after completion
+  verify-after-backup: true
+
+  # Compression settings
+  compression:
+    # Type: "zip" or "targz"
+    format: "targz"
+    # Compression level: 1 (fastest) to 9 (smallest)
+    level: 6
+
+  # Sources to back up
+  sources:
+    - path: "world"
+      name: "main-world"
+      exclude:
+        - "**/session.lock"
+        - "**/uid.dat"
+      max-depth: 100
+    - path: "world_nether"
+      name: "nether"
+      exclude:
+        - "**/session.lock"
+    - path: "world_the_end"
+      name: "the-end"
+      exclude:
+        - "**/session.lock"
+    - path: "plugins"
+      name: "plugins"
+      exclude:
+        - "**/ASPbackup/temp/**"
+        - "**/dynmap/web/**"
+        - "**/*.log"
+      max-depth: 50
+
+  # Global file filtering rules
+  file-filter:
+    # Glob patterns for files to include
+    include:
+      - "**/*"
+    # Glob patterns for files to exclude
+    exclude:
+      - "**/*.tmp"
+      - "**/*.lock"
+      - "**/*.pid"
+    # Minimum file size in bytes to include (0 = no minimum)
+    min-size-bytes: 0
+    # Maximum file size in bytes to include (0 = no maximum)
+    max-size-bytes: 0
+
+  # Backup targets
+  targets:
+    # Local target
+    - id: "local"
+      type: "LOCAL"
+      path: "backups/"
+      # Keep only the N most recent backups (0 = keep all)
+      retention-count: 10
+      # Minimum free disk space in MB required before backup
+      min-free-space-mb: 1024
+
+    # NAS target (mounted network drive) - uncomment to enable
+    # - id: "nas"
+    #   type: "NAS"
+    #   path: "/mnt/nas/minecraft-backups/"
+    #   retention-count: 5
+    #   min-free-space-mb: 5120
+
+    # Remote target (distributed transfer) - uncomment to enable
+    # - id: "remote-cluster"
+    #   type: "REMOTE"
+    #   retention-count: 3
+    #   min-free-space-mb: 10240
+
+# --- Scheduled Backups ---
+schedule:
+  enabled: false
+  # Interval in minutes between automatic backups
+  interval-minutes: 360
+  # Backup type: "full" or "incremental"
+  backup-type: "full"
+  # Target ID to send scheduled backups to
+  target-id: "local"
+  # Hours during which backups should NOT run (server time, 24h format)
+  quiet-hours:
+    - "02:00-04:00"
+
+# --- Distributed Transfer Settings ---
+transfer:
+  # Chunk size in KB for splitting files
+  chunk-size-kb: 1024
+  # Number of parallel transfer threads
+  parallel-threads: 4
+  # Connection timeout in milliseconds
+  connect-timeout-ms: 10000
+  # Read timeout in milliseconds
+  read-timeout-ms: 30000
+  # Number of retry attempts for failed chunks
+  retry-count: 3
+  # Delay between retries in milliseconds
+  retry-delay-ms: 5000
+  # Load balancing strategy: "round_robin" or "least_loaded"
+  load-balance-strategy: "least_loaded"
+
+  # Transfer nodes (receiver applications) - uncomment to configure
+  nodes: []
+    # - id: "node-1"
+    #   host: "192.168.1.101"
+    #   port: 9876
+    #   auth-token: "your-secure-token-here"
+    #   enabled: true
+    #   weight: 1
+    # - id: "node-2"
+    #   host: "192.168.1.102"
+    #   port: 9876
+    #   auth-token: "your-secure-token-here"
+    #   enabled: true
+    #   weight: 1
+
+# --- Resume / Checkpoint Settings ---
+checkpoint:
+  # Enable checkpoint/resume support
+  enabled: true
+  # Directory for storing checkpoint files
+  directory: "plugins/ASPbackup/checkpoints"
+  # Auto-clean checkpoints older than this many days
+  max-age-days: 7
+
+# --- Logging Settings ---
+logging:
+  # Log level: "DEBUG", "INFO", "WARN", "ERROR"
+  level: "INFO"
+  # Directory for log files
+  directory: "plugins/ASPbackup/logs"
+  # Keep logs for this many days
+  retention-days: 30
+  # Log transfer details (chunk-level)
+  verbose-transfer: false
+  # Log to console in addition to file
+  console-output: true
+
+# --- Disk Space Monitoring ---
+disk-space:
+  # Warn when free space on source drive drops below this percentage
+  warn-threshold-percent: 15
+  # Check interval in seconds
+  check-interval-seconds: 300
