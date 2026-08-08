@@ -314,7 +314,9 @@ disk-space:
 | `/aspbackup nodes` | `aspbackup.nodes` | 管理傳輸節點 |
 | `/aspbackup verify <id>` | `aspbackup.verify` | 驗證備份完整性 |
 | `/aspbackup reload` | `aspbackup.reload` | 重新載入配置 |
-| `/aspbackup help` | `aspbackup.command` | 顯示幫助 |
+| `/aspbackup about` | `aspbackup.command` | 顯示插件資訊 |
+| `/aspbackup info` | `aspbackup.command` | 顯示運行狀態 |
+| `/aspbackup help` | `aspbackup.command` | 顯示命令幫助 |
 
 ### 詳細命令說明
 
@@ -472,6 +474,32 @@ Started: 2026-08-08T14:30:22Z
 
 ---
 
+#### `/aspbackup about`
+
+```
+/aspbackup about
+```
+
+顯示插件名稱、版本、作者和網站資訊。
+
+---
+
+#### `/aspbackup info`
+
+```
+/aspbackup info
+```
+
+顯示當前運行狀態，包括：
+- 啟動/關閉備份是否啟用
+- 定時備份狀態
+- 備份來源數量
+- 備份目標數量
+- 傳輸節點數量
+- 活動備份任務數
+
+---
+
 ## 5. 備份流程說明
 
 ### 5.1 完整備份流程
@@ -479,27 +507,51 @@ Started: 2026-08-08T14:30:22Z
 ```
 1. 觸發備份（手動/自動/定時）
        │
-2. 檢查磁碟空間
+2. 儲存世界資料（主執行緒）
+   ├── /save-off   → 關閉自動存檔
+   ├── /save-all   → 強制儲存所有世界
+   └── /save-on    → 重新開啟自動存檔
+       │
+3. 檢查磁碟空間
    ├── 不足 → 終止備份，記錄錯誤
    └── 充足 → 繼續
        │
-3. 收集檔案（遍歷所有來源目錄，套用過濾規則）
+4. 收集檔案（遍歷所有來源目錄，套用過濾規則）
        │
-4. 壓縮檔案（ZIP 或 Tar.gz）
+5. 壓縮檔案（ZIP 或 Tar.gz，支援 SHA-256 計算）
        │
-5. 傳輸到目標
-   ├── LOCAL → 複製到本地目錄
-   ├── NAS   → 複製到網路磁碟（含重試機制）
-   └── REMOTE → 分塊傳輸到接收端節點
+6. 傳輸到目標
+   ├── LOCAL  → 複製到本地目錄
+   ├── NAS    → 複製到網路磁碟（含重試機制）
+   └── REMOTE → TCP 分塊傳輸到接收端（含 ACK 確認、SHA-256 校驗）
        │
-6. 驗證完整性（SHA-256）
+7. 驗證完整性
        │
-7. 清理舊備份（保留策略）
+8. 清理舊備份（保留策略）
        │
-8. 完成 → 記錄日誌
+9. 完成 → 記錄日誌
 ```
 
-### 5.2 中斷與續傳流程
+### 5.2 阻塞式備份機制
+
+啟動和關閉備份使用**阻塞式備份**，確保備份完整執行後再繼續：
+
+- **伺服器啟動時**：主執行緒在 `save-off/save-all/save-on` 後，將備份提交到背景執行緒，然後阻塞等待完成
+- **伺服器關閉時**：攔截 `/stop` 命令，先執行備份（阻塞），備份完成後再關閉伺服器
+- **手動備份**：非阻塞，玩家可繼續遊戲
+
+```
+主執行緒                              背景執行緒
+  │
+  ├─ save-off / save-all / save-on     │
+  ├─ future.get() ← 阻塞等待...        ├─ 收集檔案
+  │                                   ├─ 壓縮
+  │                                   ├─ 傳輸到目標
+  │                                   └─ 完成 ✓
+  │ ← 備份完成，繼續載入/關閉            │
+```
+
+### 5.3 中斷與續傳流程
 
 ```
 備份進行中
@@ -518,7 +570,7 @@ Started: 2026-08-08T14:30:22Z
        └── 完成後刪除檢查點
 ```
 
-### 5.3 備份任務狀態
+### 5.4 備份任務狀態
 
 | 狀態 | 說明 |
 |------|------|
@@ -586,8 +638,17 @@ Started: 2026-08-08T14:30:22Z
 
 ## 7. 接收端應用程式
 
-### 7.1 啟動接收端
+### 7.1 快速啟動
 
+**Windows**：雙擊 `start.bat`
+
+**Linux/macOS**：
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+**或手動啟動**：
 ```bash
 java -jar ASPbackup-receiver-1.0.0.jar \
   --port 9876 \
@@ -595,28 +656,45 @@ java -jar ASPbackup-receiver-1.0.0.jar \
   --token your-secure-token
 ```
 
-**參數說明**：
+### 7.2 接收端目錄結構
+
+```
+receiver/
+├── start.bat                        # Windows 啟動腳本
+├── start.sh                         # Linux/macOS 啟動腳本
+├── ASPbackup-receiver-1.0.0.jar     # 接收端主程式
+├── application.yml                  # 設定檔
+└── received-backups/                # 接收的備份輸出目錄
+    └── <任務ID>/
+        └── backup.tar.gz
+```
+
+### 7.3 參數說明
 
 | 參數 | 預設值 | 說明 |
 |------|--------|------|
 | `--port` | `9876` | 監聽埠號 |
 | `--dir` | `received-backups` | 備份輸出目錄 |
-| `--token` | `change-me` | 認證令牌（必須與插件配置一致） |
+| `--token` | `change-me` | 認證令牌（必須與插件 `auth-token` 一致） |
 | `--help` | - | 顯示幫助 |
 
-### 7.2 接收端目錄結構
+### 7.4 傳輸協議
 
 ```
-/mnt/backups/minecraft/
-├── a1b2c3d4/                    # 任務ID目錄
-│   ├── chunk_00000000.part      # 分塊檔案
-│   ├── chunk_00000001.part
-│   └── ...
-└── e5f6g7h8/
-    └── ...
+握手階段：
+  插件 → 接收端：protocol_version(2B) + token_len(1B) + token + node_id_len(1B) + node_id + capabilities(1B)
+  接收端 → 插件：ACK(4B, 0=成功)
+
+分塊傳輸：
+  插件 → 接收端：task_id_len(2B) + task_id + chunk_index(8B) + total_chunks(8B) + offset(8B) + data_len(4B) + checksum_len(2B) + checksum + data
+  接收端 → 插件：task_id + chunk_index(8B) + success(1B) + error_msg
+
+組裝完成：
+  接收端 → 插件：task_id + success(1B) + message
+  接收端自動組裝分塊 → backup.tar.gz → SHA-256 校驗
 ```
 
-### 7.3 安全建議
+### 7.5 安全建議
 
 1. **使用防火牆**：限制只有 Minecraft 伺服器 IP 可以連接收端埠
 2. **使用強密碼令牌**：避免使用預設的 `change-me`
@@ -725,4 +803,4 @@ NAS 目標內建重試機制（最多重試 3 次，每次間隔遞增），如�
 
 ---
 
-*ASPbackup v1.0.0 — 文件最後更新：2026-08-08*
+*ASPbackup v1.0.0-SNAPSHOT — 文件最後更新：2026-08-08*
