@@ -1,15 +1,36 @@
 #!/bin/bash
-# ASPbackup 备份接收端 — 启动脚本 (Linux/macOS)
+# ASPbackup Backup Receiver - Startup Script (Linux/macOS)
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+JAR_FILE="$SCRIPT_DIR/ASPbackup-receiver.jar"
+
+# Check if jar exists
+if [ ! -f "$JAR_FILE" ]; then
+    echo "[ERROR] Jar file not found: $JAR_FILE"
+    echo "Please ensure ASPbackup-receiver.jar is in the same directory as this script."
+    exit 1
+fi
 
 echo "============================================"
-echo "  ASPbackup 备份接收端 v1.0.0"
+echo "  ASPbackup Backup Receiver v1.0.0"
 echo "============================================"
 echo ""
-echo "正在启动接收端..."
+echo "Starting receiver..."
+echo ""
 
-# 预设配置（可在此修改）
+# Default config
 PORT=9876
-OUTPUT_DIR="received-backups"
+OUTPUT_DIR="$SCRIPT_DIR/received-backups"
 TOKEN="change-me"
 
-java -jar ASPbackup-receiver.jar --port $PORT --dir "$OUTPUT_DIR" --token $TOKEN
+# Uncomment and modify below to change defaults:
+# PORT=9876
+# OUTPUT_DIR="/mnt/backups"
+# TOKEN="your-secure-token"
+
+echo "  Port:       $PORT"
+echo "  Output Dir: $OUTPUT_DIR"
+echo "  Jar:        $JAR_FILE"
+echo ""
+
+java -jar "$JAR_FILE" --port $PORT --dir "$OUTPUT_DIR" --token "$TOKEN"

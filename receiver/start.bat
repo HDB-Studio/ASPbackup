@@ -1,23 +1,42 @@
 @echo off
-chcp 65001 >nul
-title ASPbackup 备份接收端
+setlocal enabledelayedexpansion
+
+title ASPbackup Backup Receiver
+
+:: Get script directory
+set SCRIPT_DIR=%~dp0
+set JAR_FILE=%SCRIPT_DIR%ASPbackup-receiver.jar
+
+:: Check if jar exists
+if not exist "%JAR_FILE%" (
+    echo [ERROR] Jar file not found: %JAR_FILE%
+    echo Please ensure ASPbackup-receiver.jar is in the same directory as this script.
+    pause
+    exit /b 1
+)
 
 echo ============================================
-echo   ASPbackup 备份接收端 v1.0.0
+echo   ASPbackup Backup Receiver v1.0.0
 echo ============================================
 echo.
-echo 正在启动接收端...
+echo Starting receiver...
+echo.
 
-:: 预设配置
+:: Default config
 set PORT=9876
-set OUTPUT_DIR=received-backups
+set OUTPUT_DIR=%SCRIPT_DIR%received-backups
 set TOKEN=change-me
 
-:: 可在此修改预设值
+:: Uncomment and modify below to change defaults:
 :: set PORT=9876
 :: set OUTPUT_DIR=D:\backups
 :: set TOKEN=your-secure-token
 
-java -jar ASPbackup-receiver.jar --port %PORT% --dir "%OUTPUT_DIR%" --token %TOKEN%
+echo   Port:       %PORT%
+echo   Output Dir: %OUTPUT_DIR%
+echo   Jar:        %JAR_FILE%
+echo.
+
+java -jar "%JAR_FILE%" --port %PORT% --dir "%OUTPUT_DIR%" --token %TOKEN%
 
 pause
