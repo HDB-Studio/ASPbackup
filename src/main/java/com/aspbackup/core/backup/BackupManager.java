@@ -271,7 +271,7 @@ public class BackupManager {
      * 使用 Bukkit 官方 API，避免相对路径 getParentFile() 返回 null 的问题。
      */
     private Path getServerRoot() {
-        return plugin.getServer().getWorldContainer().toPath().toAbsolutePath();
+        return plugin.getServer().getWorldContainer().toPath().toAbsolutePath().normalize();
     }
 
     private BackupTarget findTarget(String targetId) {

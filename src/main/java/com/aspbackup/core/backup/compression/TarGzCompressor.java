@@ -5,6 +5,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipParameters;
+import org.apache.commons.io.output.CountingOutputStream;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -28,8 +29,11 @@ public class TarGzCompressor implements Compressor {
         GzipParameters params = new GzipParameters();
         params.setCompressionLevel(level);
 
+        // Wrap output with CountingOutputStream to track compressed bytes
+        CountingOutputStream countingOutput = new CountingOutputStream(output);
+
         try (GzipCompressorOutputStream gzos = new GzipCompressorOutputStream(
-                new BufferedOutputStream(output), params);
+                new BufferedOutputStream(countingOutput), params);
              TarArchiveOutputStream tos = new TarArchiveOutputStream(gzos)) {
 
             tos.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
@@ -57,7 +61,7 @@ public class TarGzCompressor implements Compressor {
             tos.finish();
         }
 
-        return new CompressionResult(originalBytes, originalBytes);
+        return new CompressionResult(countingOutput.getByteCount(), originalBytes);
     }
 
     @Override

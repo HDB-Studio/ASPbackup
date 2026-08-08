@@ -1,6 +1,7 @@
 package com.aspbackup.core.backup.compression;
 
 import com.aspbackup.core.backup.source.FileEntry;
+import org.apache.commons.io.output.CountingOutputStream;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -20,9 +21,11 @@ public class ZipCompressor implements Compressor {
     public CompressionResult compress(List<FileEntry> files, OutputStream output,
                                        Path baseDir, int level) throws IOException {
         long originalBytes = 0;
-        long compressedBytes;
 
-        try (ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(output))) {
+        // Wrap output with CountingOutputStream to track compressed bytes
+        CountingOutputStream countingOutput = new CountingOutputStream(output);
+
+        try (ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(countingOutput))) {
             zos.setLevel(level);
 
             byte[] buffer = new byte[BUFFER_SIZE];
@@ -47,10 +50,7 @@ public class ZipCompressor implements Compressor {
             zos.finish();
         }
 
-        // Estimate compressed size (we can't easily get it from ZipOutputStream)
-        compressedBytes = originalBytes; // Placeholder; actual size is in the temp file
-
-        return new CompressionResult(compressedBytes, originalBytes);
+        return new CompressionResult(countingOutput.getByteCount(), originalBytes);
     }
 
     @Override
