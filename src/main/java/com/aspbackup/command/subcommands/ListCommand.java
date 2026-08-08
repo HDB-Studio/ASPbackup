@@ -21,9 +21,9 @@ public class ListCommand implements Subcommand {
 
     @Override
     public boolean execute(CommandSender sender, String[] args) {
-        sender.sendMessage(ChatColor.GOLD + "===== Backup History =====");
-        sender.sendMessage(ChatColor.GRAY + "Backup history will be available in Phase 2.");
-        sender.sendMessage(ChatColor.GRAY + "Use /aspbackup status for active tasks.");
+        sender.sendMessage(ChatColor.GOLD + "===== 备份历史 =====");
+        sender.sendMessage(ChatColor.GRAY + "备份历史功能将在阶段2中实现。");
+        sender.sendMessage(ChatColor.GRAY + "使用 /aspbackup status 查看当前活动任务。");
         return true;
     }
 
@@ -45,7 +45,7 @@ public class ListCommand implements Subcommand {
     public String getUsage() { return "/aspbackup list [--active|--completed|--failed|--all] [--page <n>]"; }
 
     @Override
-    public String getDescription() { return "List backup history"; }
+    public String getDescription() { return "列出备份历史记录"; }
 
     @Override
     public String getName() { return "list"; }

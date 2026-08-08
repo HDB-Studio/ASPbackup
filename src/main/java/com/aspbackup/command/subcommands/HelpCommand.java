@@ -25,15 +25,15 @@ public class HelpCommand implements Subcommand {
             // Show help for specific subcommand
             Subcommand sub = parent.getSubcommands().get(args[0].toLowerCase());
             if (sub == null) {
-                sender.sendMessage(ChatColor.RED + "Unknown subcommand: " + args[0]);
+                sender.sendMessage(ChatColor.RED + "未知子命令：" + args[0]);
                 return true;
             }
             showSubcommandHelp(sender, sub);
             return true;
         }
 
-        // Show all commands
-        sender.sendMessage(ChatColor.GOLD + "===== ASPbackup Commands =====");
+        // 显示所有命令
+        sender.sendMessage(ChatColor.GOLD + "===== ASPbackup 命令列表 =====");
         sender.sendMessage("");
 
         Map<String, Subcommand> subs = parent.getSubcommands();
@@ -46,16 +46,16 @@ public class HelpCommand implements Subcommand {
         }
 
         sender.sendMessage("");
-        sender.sendMessage(ChatColor.GRAY + "Use /aspbackup help <command> for detailed usage.");
+        sender.sendMessage(ChatColor.GRAY + "使用 /aspbackup help <命令> 查看详细用法。");
         return true;
     }
 
     private void showSubcommandHelp(CommandSender sender, Subcommand sub) {
-        sender.sendMessage(ChatColor.GOLD + "===== Help: " + sub.getName() + " =====");
-        sender.sendMessage(ChatColor.YELLOW + "Usage: " + sub.getUsage());
-        sender.sendMessage(ChatColor.WHITE + "Description: " + sub.getDescription());
+        sender.sendMessage(ChatColor.GOLD + "===== 帮助：" + sub.getName() + " =====");
+        sender.sendMessage(ChatColor.YELLOW + "用法：" + sub.getUsage());
+        sender.sendMessage(ChatColor.WHITE + "描述：" + sub.getDescription());
         if (sub.getPermission() != null) {
-            sender.sendMessage(ChatColor.GRAY + "Permission: " + sub.getPermission());
+            sender.sendMessage(ChatColor.GRAY + "权限：" + sub.getPermission());
         }
     }
 
@@ -83,7 +83,7 @@ public class HelpCommand implements Subcommand {
 
     @Override
     public String getDescription() {
-        return "Show help for ASPbackup commands";
+        return "显示 ASPbackup 命令帮助";
     }
 
     @Override

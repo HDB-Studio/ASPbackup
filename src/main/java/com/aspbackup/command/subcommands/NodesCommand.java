@@ -21,7 +21,7 @@ public class NodesCommand implements Subcommand {
     @Override
     public boolean execute(CommandSender sender, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.RED + "Usage: /aspbackup nodes <list|add|remove|status|enable|disable>");
+            sender.sendMessage(ChatColor.RED + "用法：/aspbackup nodes <list|add|remove|status|enable|disable>");
             return true;
         }
 
@@ -29,7 +29,7 @@ public class NodesCommand implements Subcommand {
         switch (action) {
             case "list" -> nodesList(sender);
             case "status" -> nodesStatus(sender, args.length > 1 ? args[1] : null);
-            default -> sender.sendMessage(ChatColor.YELLOW + "Node management will be available in Phase 6 (distributed transfer).");
+            default -> sender.sendMessage(ChatColor.YELLOW + "节点管理功能将在阶段6（分布式传输）中实现。");
         }
         return true;
     }
@@ -37,20 +37,20 @@ public class NodesCommand implements Subcommand {
     private void nodesList(CommandSender sender) {
         var nodes = plugin.getConfigManager().getNodeConfigs();
         if (nodes.isEmpty()) {
-            sender.sendMessage(ChatColor.GRAY + "No transfer nodes configured.");
-            sender.sendMessage(ChatColor.GRAY + "Add nodes in config.yml under transfer.nodes section.");
+            sender.sendMessage(ChatColor.GRAY + "未配置传输节点。");
+            sender.sendMessage(ChatColor.GRAY + "请在 config.yml 的 transfer.nodes 部分添加节点配置。");
             return;
         }
-        sender.sendMessage(ChatColor.GOLD + "===== Transfer Nodes =====");
+        sender.sendMessage(ChatColor.GOLD + "===== 传输节点 =====");
         for (var node : nodes) {
-            String status = node.isEnabled() ? ChatColor.GREEN + "ENABLED" : ChatColor.RED + "DISABLED";
+            String status = node.isEnabled() ? ChatColor.GREEN + "已启用" : ChatColor.RED + "已禁用";
             sender.sendMessage(String.format("  %s - %s:%d [%s%s]",
                     node.getId(), node.getHost(), node.getPort(), status, ChatColor.RESET));
         }
     }
 
     private void nodesStatus(CommandSender sender, String nodeId) {
-        sender.sendMessage(ChatColor.GRAY + "Node status monitoring will be available in Phase 6.");
+        sender.sendMessage(ChatColor.GRAY + "节点状态监控功能将在阶段6中实现。");
     }
 
     @Override
@@ -77,7 +77,7 @@ public class NodesCommand implements Subcommand {
     public String getUsage() { return "/aspbackup nodes <list|add|remove|status|enable|disable>"; }
 
     @Override
-    public String getDescription() { return "Manage distributed transfer nodes"; }
+    public String getDescription() { return "管理分布式传输节点"; }
 
     @Override
     public String getName() { return "nodes"; }

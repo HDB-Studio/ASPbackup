@@ -21,9 +21,9 @@ public class ReloadCommand implements Subcommand {
 
     @Override
     public boolean execute(CommandSender sender, String[] args) {
-        sender.sendMessage(ChatColor.YELLOW + "Reloading ASPbackup configuration...");
+        sender.sendMessage(ChatColor.YELLOW + "正在重新加载 ASPbackup 配置...");
         plugin.getConfigManager().reload();
-        sender.sendMessage(ChatColor.GREEN + "ASPbackup configuration reloaded successfully!");
+        sender.sendMessage(ChatColor.GREEN + "ASPbackup 配置已重新加载成功！");
         return true;
     }
 
@@ -44,7 +44,7 @@ public class ReloadCommand implements Subcommand {
 
     @Override
     public String getDescription() {
-        return "Reload the plugin configuration from config.yml";
+        return "重新加载插件配置文件";
     }
 
     @Override

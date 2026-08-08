@@ -40,13 +40,13 @@ public class StartCommand implements Subcommand {
         if (targetId == null) {
             var targets = plugin.getConfigManager().getBackupConfig().getTargets();
             if (targets.isEmpty()) {
-                sender.sendMessage(ChatColor.RED + "No backup targets configured!");
+                sender.sendMessage(ChatColor.RED + "未配置备份目标！");
                 return true;
             }
             targetId = targets.get(0).getId();
         }
 
-        sender.sendMessage(ChatColor.YELLOW + "Starting " + type + " backup to target '" + targetId + "'...");
+        sender.sendMessage(ChatColor.YELLOW + "正在启动 " + type + " 备份到目标 '" + targetId + "'...");
 
         var taskId = plugin.getBackupManager().startBackup(
                 type.equalsIgnoreCase("full") ?
@@ -55,9 +55,9 @@ public class StartCommand implements Subcommand {
                 targetId);
 
         if (taskId != null) {
-            sender.sendMessage(ChatColor.GREEN + "Backup started! Task ID: " + ChatColor.WHITE + taskId);
+            sender.sendMessage(ChatColor.GREEN + "备份已启动！任务ID：" + ChatColor.WHITE + taskId);
         } else {
-            sender.sendMessage(ChatColor.RED + "Failed to start backup. Check logs for details.");
+            sender.sendMessage(ChatColor.RED + "备份启动失败，请查看日志了解详情。");
         }
 
         return true;
@@ -91,7 +91,7 @@ public class StartCommand implements Subcommand {
     public String getUsage() { return "/aspbackup start [--full|--incremental] [--target <id>]"; }
 
     @Override
-    public String getDescription() { return "Start a manual backup operation"; }
+    public String getDescription() { return "手动启动备份操作"; }
 
     @Override
     public String getName() { return "start"; }

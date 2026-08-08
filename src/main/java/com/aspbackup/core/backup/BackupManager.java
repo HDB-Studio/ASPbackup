@@ -19,7 +19,7 @@ import java.util.concurrent.*;
 import java.util.logging.Level;
 
 /**
- * Manages all backup tasks - creation, monitoring, stopping, and resuming.
+ * 管理所有备份任务：创建、监控、停止和续传。
  */
 public class BackupManager {
 
@@ -34,14 +34,14 @@ public class BackupManager {
     public BackupManager(ASPBackup plugin) {
         this.plugin = plugin;
         this.backupExecutor = Executors.newFixedThreadPool(2, r -> {
-            Thread t = new Thread(r, "ASPbackup-Worker");
+            Thread t = new Thread(r, "ASPbackup-工作线程");
             t.setDaemon(true);
             return t;
         });
     }
 
     /**
-     * Start a new backup operation asynchronously.
+     * 异步启动备份操作。
      */
     public String startBackup(BackupType type, String targetId) {
         String taskId = UUID.randomUUID().toString().substring(0, 8);
@@ -56,19 +56,44 @@ public class BackupManager {
     }
 
     /**
-     * Stop an active backup operation.
+     * 同步启动备份操作（阻塞当前线程直到备份完成）。
+     * 用于启动和关闭时的自动备份，确保备份完成后再继续流程。
+     */
+    public String startBackupBlocking(BackupType type, String targetId) {
+        String taskId = UUID.randomUUID().toString().substring(0, 8);
+        BackupTask task = new BackupTask(taskId, type, targetId);
+        activeTasks.put(taskId, task);
+
+        plugin.getLogger().info("开始执行阻塞式备份...");
+        plugin.getBackupLogger().logBackupStart(taskId, type.name(), "N/A", targetId);
+
+        Future<?> future = backupExecutor.submit(() -> executeBackup(task));
+        try {
+            future.get(); // 阻塞等待备份完成
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            plugin.getLogger().warning("备份被中断");
+        } catch (ExecutionException e) {
+            plugin.getLogger().log(Level.SEVERE, "备份执行失败", e.getCause());
+        }
+
+        return taskId;
+    }
+
+    /**
+     * 停止正在执行的备份操作。
      */
     public boolean stopBackup(String taskId) {
         BackupTask task = activeTasks.get(taskId);
         if (task == null) return false;
 
         task.requestInterrupt();
-        plugin.getBackupLogger().info(taskId, "Backup interrupt requested by administrator");
+        plugin.getBackupLogger().info(taskId, "管理员已请求中断备份");
         return true;
     }
 
     /**
-     * Resume a paused backup operation.
+     * 从中断的检查点恢复备份。
      */
     public String resumeBackup(String taskId) {
         BackupTask task = pausedTasks.remove(taskId);
@@ -78,15 +103,14 @@ public class BackupManager {
         BackupTask resumedTask = new BackupTask(newTaskId, task.getType(), task.getTargetId());
         activeTasks.put(newTaskId, resumedTask);
 
-        plugin.getBackupLogger().info(newTaskId, "Backup resumed from checkpoint");
-        // Phase 4 will add checkpoint loading here
+        plugin.getBackupLogger().info(newTaskId, "从检查点恢复备份");
         backupExecutor.submit(() -> executeBackup(resumedTask));
 
         return newTaskId;
     }
 
     /**
-     * Core backup execution logic.
+     * 核心备份执行逻辑。
      */
     private void executeBackup(BackupTask task) {
         long startTime = System.currentTimeMillis();
@@ -95,22 +119,22 @@ public class BackupManager {
         try {
             BackupConfig config = plugin.getConfigManager().getBackupConfig();
 
-            // Phase 1: Find target
+            // 阶段1：查找目标
             BackupTarget target = findTarget(task.getTargetId());
             if (target == null) {
-                failTask(task, "Target not found: " + task.getTargetId());
+                failTask(task, "未找到备份目标：" + task.getTargetId());
                 return;
             }
 
-            // Phase 2: Check disk space
+            // 阶段2：检查磁盘空间
             long requiredSpace = estimateRequiredSpace();
             if (target.getFreeSpace() < requiredSpace) {
-                failTask(task, "Insufficient disk space on target. Required: " +
-                        formatBytes(requiredSpace) + ", Available: " + formatBytes(target.getFreeSpace()));
+                failTask(task, "目标磁盘空间不足。需要：" +
+                        formatBytes(requiredSpace) + "，可用：" + formatBytes(target.getFreeSpace()));
                 return;
             }
 
-            // Phase 3: Collect files from all sources
+            // 阶段3：从所有来源收集文件
             task.setState(BackupState.COLLECTING);
             List<FileEntry> allFiles = new ArrayList<>();
             long totalBytes = 0;
@@ -123,7 +147,7 @@ public class BackupManager {
 
                 Path sourcePath = plugin.getDataFolder().getParentFile().getParentFile().toPath().resolve(srcDef.getPath());
                 if (!Files.exists(sourcePath)) {
-                    plugin.getLogger().warning("Source path does not exist: " + sourcePath);
+                    plugin.getLogger().warning("来源路径不存在：" + sourcePath);
                     continue;
                 }
 
@@ -141,14 +165,14 @@ public class BackupManager {
             task.setTotalFiles(allFiles.size());
             task.setTotalBytes(totalBytes);
             plugin.getBackupLogger().info(task.getTaskId(),
-                    String.format("Collected %d files (%s)", allFiles.size(), formatBytes(totalBytes)));
+                    String.format("已收集 %d 个文件（%s）", allFiles.size(), formatBytes(totalBytes)));
 
             if (allFiles.isEmpty()) {
-                failTask(task, "No files collected for backup");
+                failTask(task, "未收集到任何备份文件");
                 return;
             }
 
-            // Phase 4: Compress files
+            // 阶段4：压缩文件
             task.setState(BackupState.COMPRESSING);
             Files.createDirectories(Path.of(config.getTempDirectory()));
             String timestamp = LocalDateTime.now().format(TIMESTAMP_FMT);
@@ -170,25 +194,25 @@ public class BackupManager {
             task.setFilesProcessed(allFiles.size());
             task.setBytesProcessed(compressedSize);
             plugin.getBackupLogger().info(task.getTaskId(),
-                    String.format("Compressed to %s (ratio: %.1f%%)",
+                    String.format("已压缩至 %s（压缩比：%.1f%%）",
                             formatBytes(compressedSize), result.getCompressionRatio() * 100));
 
-            // Phase 5: Transfer to target
+            // 阶段5：传输到目标
             task.setState(BackupState.TRANSFERRING);
             String backupFileName = "aspbackup-" + task.getTaskId() + "-" + timestamp + ext;
             try (InputStream fis = Files.newInputStream(tempFile)) {
                 target.write(fis, backupFileName);
             }
 
-            // Phase 6: Verify (Phase 3 will add actual verification)
+            // 阶段6：验证完整性
             task.setState(BackupState.VERIFYING);
-            task.setChecksum("pending-verification");
+            task.setChecksum("待验证");
             task.setFinalSize(compressedSize);
 
-            // Phase 7: Enforce retention
+            // 阶段7：执行保留策略
             target.enforceRetention();
 
-            // Complete
+            // 完成
             task.setState(BackupState.COMPLETED);
             task.setDurationMs(System.currentTimeMillis() - startTime);
             activeTasks.remove(task.getTaskId());
@@ -196,14 +220,14 @@ public class BackupManager {
 
             plugin.getBackupLogger().logBackupComplete(task.getTaskId(),
                     compressedSize, task.getDurationMs(), task.getChecksum());
-            plugin.getLogger().info("Backup " + task.getTaskId() + " completed successfully in " +
+            plugin.getLogger().info("备份 " + task.getTaskId() + " 已成功完成，耗时 " +
                     formatDuration(task.getDurationMs()));
 
         } catch (Exception e) {
-            plugin.getLogger().log(Level.SEVERE, "Backup " + task.getTaskId() + " failed", e);
+            plugin.getLogger().log(Level.SEVERE, "备份 " + task.getTaskId() + " 失败", e);
             failTask(task, e.getMessage());
         } finally {
-            // Clean up temp file
+            // 清理暂存文件
             if (tempFile != null) {
                 try { Files.deleteIfExists(tempFile); } catch (IOException ignored) {}
             }
@@ -223,11 +247,11 @@ public class BackupManager {
                         yield new LocalBackupTarget(tgt.getId(), nasPath, tgt.getRetentionCount(), plugin.getLogger());
                     }
                     case "REMOTE" -> {
-                        plugin.getLogger().warning("Remote target not yet implemented (Phase 6)");
+                        plugin.getLogger().warning("远端目标尚未实现（阶段6）");
                         yield null;
                     }
                     default -> {
-                        plugin.getLogger().warning("Unknown target type: " + tgt.getType());
+                        plugin.getLogger().warning("未知目标类型：" + tgt.getType());
                         yield null;
                     }
                 };
@@ -259,7 +283,7 @@ public class BackupManager {
                 }
             } catch (IOException ignored) {}
         }
-        return total; // Conservative estimate (pre-compression)
+        return total;
     }
 
     private void failTask(BackupTask task, String reason) {
@@ -273,10 +297,10 @@ public class BackupManager {
         task.setState(BackupState.PAUSED);
         activeTasks.remove(task.getTaskId());
         pausedTasks.put(task.getTaskId(), task);
-        plugin.getBackupLogger().info(task.getTaskId(), "Backup paused (checkpoint will be saved in Phase 4)");
+        plugin.getBackupLogger().info(task.getTaskId(), "备份已暂停（检查点将在阶段4中保存）");
     }
 
-    // --- Query methods ---
+    // --- 查询方法 ---
 
     public BackupTask getTask(String taskId) {
         BackupTask task = activeTasks.get(taskId);
@@ -309,7 +333,7 @@ public class BackupManager {
         for (var entry : new ArrayList<>(activeTasks.entrySet())) {
             BackupTask task = entry.getValue();
             task.setState(BackupState.CANCELLED);
-            plugin.getBackupLogger().warn(task.getTaskId(), "Backup cancelled due to plugin shutdown");
+            plugin.getBackupLogger().warn(task.getTaskId(), "插件关闭，备份已取消");
         }
         activeTasks.clear();
     }
@@ -323,9 +347,9 @@ public class BackupManager {
 
     private static String formatDuration(long ms) {
         if (ms < 1000) return ms + "ms";
-        if (ms < 60000) return String.format("%.1fs", ms / 1000.0);
+        if (ms < 60000) return String.format("%.1f秒", ms / 1000.0);
         long min = ms / 60000;
         long sec = (ms % 60000) / 1000;
-        return min + "m " + sec + "s";
+        return min + "分" + sec + "秒";
     }
 }

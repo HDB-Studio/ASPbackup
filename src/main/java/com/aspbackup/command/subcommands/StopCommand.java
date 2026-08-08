@@ -22,7 +22,7 @@ public class StopCommand implements Subcommand {
     @Override
     public boolean execute(CommandSender sender, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.RED + "Usage: /aspbackup stop <task-id>");
+            sender.sendMessage(ChatColor.RED + "用法：/aspbackup stop <任务ID>");
             return true;
         }
 
@@ -30,10 +30,10 @@ public class StopCommand implements Subcommand {
         boolean stopped = plugin.getBackupManager().stopBackup(taskId);
 
         if (stopped) {
-            sender.sendMessage(ChatColor.GREEN + "Backup task " + taskId + " has been stopped.");
-            sender.sendMessage(ChatColor.GRAY + "A checkpoint has been saved. Use /aspbackup resume " + taskId + " to continue.");
+            sender.sendMessage(ChatColor.GREEN + "备份任务 " + taskId + " 已停止。");
+            sender.sendMessage(ChatColor.GRAY + "已保存检查点。使用 /aspbackup resume " + taskId + " 继续执行。");
         } else {
-            sender.sendMessage(ChatColor.RED + "No active backup task found with ID: " + taskId);
+            sender.sendMessage(ChatColor.RED + "未找到活动备份任务，ID：" + taskId);
         }
 
         return true;
@@ -54,7 +54,7 @@ public class StopCommand implements Subcommand {
     public String getUsage() { return "/aspbackup stop <task-id>"; }
 
     @Override
-    public String getDescription() { return "Stop an active backup operation and save a checkpoint"; }
+    public String getDescription() { return "停止活动备份并保存检查点"; }
 
     @Override
     public String getName() { return "stop"; }

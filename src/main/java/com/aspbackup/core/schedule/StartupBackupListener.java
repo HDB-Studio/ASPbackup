@@ -6,7 +6,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.server.ServerLoadEvent;
 
 /**
- * Triggers automatic backup when the server finishes loading.
+ * 伺服器启动时自动触发备份。
+ * 使用阻塞式备份确保备份完成后再继续加载流程。
  */
 public class StartupBackupListener implements Listener {
 
@@ -23,19 +24,23 @@ public class StartupBackupListener implements Listener {
         }
 
         int delaySeconds = plugin.getConfigManager().getBackupConfig().getStartDelaySeconds();
-        plugin.getLogger().info("Startup backup scheduled in " + delaySeconds + " seconds...");
+        plugin.getLogger().info("启动备份将在 " + delaySeconds + " 秒后开始...");
 
         plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
             var targets = plugin.getConfigManager().getBackupConfig().getTargets();
             if (targets.isEmpty()) {
-                plugin.getLogger().warning("No backup targets configured, skipping startup backup.");
+                plugin.getLogger().warning("未配置备份目标，跳过启动备份。");
                 return;
             }
 
             String targetId = targets.get(0).getId();
-            plugin.getBackupManager().startBackup(
+            plugin.getLogger().info("正在执行启动备份，目标：" + targetId + "，请稍候...");
+
+            // 使用阻塞式备份，确保备份完成后再继续
+            plugin.getBackupManager().startBackupBlocking(
                     com.aspbackup.core.backup.BackupType.FULL, targetId);
-            plugin.getLogger().info("Startup backup initiated to target: " + targetId);
-        }, delaySeconds * 20L); // Convert seconds to ticks
+
+            plugin.getLogger().info("启动备份已完成，伺服器继续加载...");
+        }, delaySeconds * 20L); // 秒转 tick
     }
 }

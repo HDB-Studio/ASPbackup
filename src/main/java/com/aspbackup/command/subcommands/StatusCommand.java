@@ -27,7 +27,7 @@ public class StatusCommand implements Subcommand {
             String taskId = args[0];
             var task = plugin.getBackupManager().getTask(taskId);
             if (task == null) {
-                sender.sendMessage(ChatColor.RED + "No task found with ID: " + taskId);
+                sender.sendMessage(ChatColor.RED + "未找到任务，ID：" + taskId);
                 return true;
             }
             showDetailedStatus(sender, task);
@@ -37,11 +37,11 @@ public class StatusCommand implements Subcommand {
         // Show summary of all tasks
         var tasks = plugin.getBackupManager().getAllTasks();
         if (tasks.isEmpty()) {
-            sender.sendMessage(ChatColor.GRAY + "No backup tasks found.");
+            sender.sendMessage(ChatColor.GRAY + "未找到备份任务。");
             return true;
         }
 
-        sender.sendMessage(ChatColor.GOLD + "===== Backup Tasks =====");
+        sender.sendMessage(ChatColor.GOLD + "===== 备份任务 =====");
         for (var task : tasks) {
             showTaskSummary(sender, task);
         }
@@ -64,16 +64,16 @@ public class StatusCommand implements Subcommand {
     }
 
     private void showDetailedStatus(CommandSender sender, BackupTask task) {
-        sender.sendMessage(ChatColor.GOLD + "===== Task: " + task.getTaskId() + " =====");
-        sender.sendMessage(ChatColor.YELLOW + "Type: " + ChatColor.WHITE + task.getType());
-        sender.sendMessage(ChatColor.YELLOW + "State: " + ChatColor.WHITE + task.getState());
-        sender.sendMessage(ChatColor.YELLOW + "Progress: " + ChatColor.WHITE + String.format("%.1f%%", task.getProgress()));
-        sender.sendMessage(ChatColor.YELLOW + "Files: " + ChatColor.WHITE +
+        sender.sendMessage(ChatColor.GOLD + "===== 任务：" + task.getTaskId() + " =====");
+        sender.sendMessage(ChatColor.YELLOW + "类型：" + ChatColor.WHITE + task.getType());
+        sender.sendMessage(ChatColor.YELLOW + "状态：" + ChatColor.WHITE + task.getState());
+        sender.sendMessage(ChatColor.YELLOW + "进度：" + ChatColor.WHITE + String.format("%.1f%%", task.getProgress()));
+        sender.sendMessage(ChatColor.YELLOW + "文件：" + ChatColor.WHITE +
                 task.getFilesProcessed() + "/" + task.getTotalFiles());
-        sender.sendMessage(ChatColor.YELLOW + "Bytes: " + ChatColor.WHITE +
+        sender.sendMessage(ChatColor.YELLOW + "大小：" + ChatColor.WHITE +
                 formatBytes(task.getBytesProcessed()) + "/" + formatBytes(task.getTotalBytes()));
-        sender.sendMessage(ChatColor.YELLOW + "Target: " + ChatColor.WHITE + task.getTargetId());
-        sender.sendMessage(ChatColor.YELLOW + "Started: " + ChatColor.WHITE + task.getStartTime());
+        sender.sendMessage(ChatColor.YELLOW + "目标：" + ChatColor.WHITE + task.getTargetId());
+        sender.sendMessage(ChatColor.YELLOW + "开始时间：" + ChatColor.WHITE + task.getStartTime());
     }
 
     private String formatBytes(long bytes) {
@@ -98,7 +98,7 @@ public class StatusCommand implements Subcommand {
     public String getUsage() { return "/aspbackup status [task-id]"; }
 
     @Override
-    public String getDescription() { return "View backup operation status"; }
+    public String getDescription() { return "查看备份操作状态"; }
 
     @Override
     public String getName() { return "status"; }

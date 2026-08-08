@@ -14,10 +14,9 @@ import java.util.Objects;
 import java.util.logging.Level;
 
 /**
- * ASPbackup - Advanced Spigot Backup Plugin
+ * ASPbackup - Minecraft Spigot 伺服器进阶备份插件
  * <p>
- * Provides comprehensive backup management with distributed transfer,
- * checkpoint/resume, integrity verification, and multi-target support.
+ * 提供全面的备份管理功能，包括分散式传输、断点续传、完整性验证和多目标支持。
  */
 public final class ASPBackup extends JavaPlugin {
 
@@ -33,45 +32,45 @@ public final class ASPBackup extends JavaPlugin {
     public void onEnable() {
         instance = this;
 
-        // Initialize logging first
+        // 初始化日志系统
         backupLogger = new BackupLogger(this);
 
         getLogger().info("============================================");
-        getLogger().info("  ASPbackup v" + getDescription().getVersion() + " starting...");
+        getLogger().info("  ASPbackup v" + getDescription().getVersion() + " 正在启动...");
         getLogger().info("============================================");
 
         try {
-            // Initialize configuration
+            // 初始化配置
             configManager = new ConfigManager(this);
             configManager.load();
 
-            // Initialize backup manager
+            // 初始化备份管理器
             backupManager = new BackupManager(this);
 
-            // Initialize transfer manager
+            // 初始化传输管理器
             transferManager = new TransferManager(this);
 
-            // Register commands
+            // 注册命令
             var command = new ASPBackupCommand(this);
             var cmd = Objects.requireNonNull(getCommand("aspbackup"));
             cmd.setExecutor(command);
             cmd.setTabCompleter(command);
 
-            // Register event listeners
+            // 注册事件监听器
             getServer().getPluginManager().registerEvents(
                     new StartupBackupListener(this), this);
             getServer().getPluginManager().registerEvents(
                     new ShutdownBackupListener(this), this);
 
-            // Start auto-backup scheduler if enabled
+            // 如果启用定时备份，启动调度器
             if (configManager.getScheduleConfig().isEnabled()) {
                 autoBackupScheduler = new AutoBackupScheduler(this);
                 autoBackupScheduler.start();
             }
 
-            getLogger().info("ASPbackup enabled successfully!");
+            getLogger().info("ASPbackup 已成功启用！");
         } catch (Exception e) {
-            getLogger().log(Level.SEVERE, "Failed to enable ASPbackup", e);
+            getLogger().log(Level.SEVERE, "ASPbackup 启用失败", e);
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -79,34 +78,34 @@ public final class ASPBackup extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        getLogger().info("ASPbackup shutting down...");
+        getLogger().info("ASPbackup 正在关闭...");
 
-        // Stop auto-backup scheduler
+        // 停止定时备份调度器
         if (autoBackupScheduler != null) {
             autoBackupScheduler.stop();
         }
 
-        // Shutdown transfer manager (close connections)
+        // 关闭传输管理器（关闭所有连接）
         if (transferManager != null) {
             transferManager.shutdown();
         }
 
-        // Cancel any running backup tasks
+        // 取消所有正在执行的备份任务
         if (backupManager != null) {
             backupManager.shutdown();
         }
 
-        // Close logger
+        // 关闭日志系统
         if (backupLogger != null) {
             backupLogger.close();
         }
 
-        getLogger().info("ASPbackup disabled. Goodbye!");
+        getLogger().info("ASPbackup 已关闭。再见！");
         instance = null;
     }
 
     /**
-     * Get the singleton instance of this plugin.
+     * 获取此插件的单例实例。
      */
     public static ASPBackup getInstance() {
         return instance;

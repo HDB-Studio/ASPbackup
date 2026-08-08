@@ -22,18 +22,18 @@ public class ResumeCommand implements Subcommand {
     @Override
     public boolean execute(CommandSender sender, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.RED + "Usage: /aspbackup resume <task-id>");
+            sender.sendMessage(ChatColor.RED + "用法：/aspbackup resume <任务ID>");
             return true;
         }
 
         String taskId = args[0];
-        sender.sendMessage(ChatColor.YELLOW + "Resuming backup task " + taskId + "...");
+        sender.sendMessage(ChatColor.YELLOW + "正在恢复备份任务 " + taskId + "...");
 
         var newTaskId = plugin.getBackupManager().resumeBackup(taskId);
         if (newTaskId != null) {
-            sender.sendMessage(ChatColor.GREEN + "Backup resumed! Task ID: " + ChatColor.WHITE + newTaskId);
+            sender.sendMessage(ChatColor.GREEN + "备份已恢复！任务ID：" + ChatColor.WHITE + newTaskId);
         } else {
-            sender.sendMessage(ChatColor.RED + "Cannot resume task " + taskId + ". Checkpoint may not exist or task is not in PAUSED state.");
+            sender.sendMessage(ChatColor.RED + "无法恢复任务 " + taskId + "。检查点可能不存在或任务不在暂停状态。");
         }
 
         return true;
@@ -54,7 +54,7 @@ public class ResumeCommand implements Subcommand {
     public String getUsage() { return "/aspbackup resume <task-id>"; }
 
     @Override
-    public String getDescription() { return "Resume an interrupted backup from its checkpoint"; }
+    public String getDescription() { return "从检查点恢复已中断的备份"; }
 
     @Override
     public String getName() { return "resume"; }

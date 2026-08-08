@@ -55,14 +55,14 @@ public class ASPBackupCommand implements CommandExecutor, TabCompleter {
         Subcommand sub = subcommands.get(subName);
 
         if (sub == null) {
-            sender.sendMessage(ChatColor.RED + "Unknown subcommand: " + subName);
-            sender.sendMessage(ChatColor.GRAY + "Use /aspbackup help for a list of commands.");
+            sender.sendMessage(ChatColor.RED + "未知子命令：" + subName);
+            sender.sendMessage(ChatColor.GRAY + "使用 /aspbackup help 查看命令列表。");
             return true;
         }
 
         // Check permission
         if (sub.getPermission() != null && !sender.hasPermission(sub.getPermission())) {
-            sender.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
+            sender.sendMessage(ChatColor.RED + "你无权使用此命令。");
             return true;
         }
 
@@ -71,8 +71,8 @@ public class ASPBackupCommand implements CommandExecutor, TabCompleter {
         try {
             return sub.execute(sender, subArgs);
         } catch (Exception e) {
-            sender.sendMessage(ChatColor.RED + "An error occurred while executing this command.");
-            plugin.getLogger().warning("Error executing subcommand '" + subName + "': " + e.getMessage());
+            sender.sendMessage(ChatColor.RED + "执行命令时发生错误。");
+            plugin.getLogger().warning("执行子命令时出错 '" + subName + "': " + e.getMessage());
             e.printStackTrace();
             return true;
         }

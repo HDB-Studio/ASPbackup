@@ -1,123 +1,156 @@
 # ============================================================
-# ASPbackup Configuration
+# ASPbackup 配置档案
 # ============================================================
 
-# --- Backup Settings ---
+# --- 备份设置 ---
 backup:
-  # Auto-backup when the server starts
+  # 伺服器启动时自动备份
   auto-on-start: true
-  # Auto-backup when the server stops (via /stop command)
+  # 伺服器关闭时自动备份（/stop 命令）
   auto-on-shutdown: true
-  # Delay in seconds before start backup begins (allows server to stabilize)
-  start-delay-seconds: 30
-  # Temporary directory for staging backups before transfer
+  # 启动备份延迟秒数（让伺服器稳定后再执行备份）
+  start-delay-seconds: 10
+  # 暂存目录（压缩中的备份档）
   temp-directory: "plugins/ASPbackup/temp"
-  # Maximum individual backup size in MB (0 = no limit)
+  # 单次备份最大大小（MB），0 = 无限制
   max-backup-size-mb: 0
-  # Verify backup integrity after completion
+  # 备份完成后验证完整性
   verify-after-backup: true
 
-  # Compression settings
+  # 压缩设置
   compression:
-    # Type: "zip" or "targz"
+    # 格式："zip" 或 "targz"
     format: "targz"
-    # Compression level: 1 (fastest) to 9 (smallest)
+    # 压缩等级：1（最快）到 9（最小）
     level: 6
 
-  # Sources to back up
+  # 备份来源
   sources:
+    # 世界存档
     - path: "world"
-      name: "main-world"
+      name: "主世界"
       exclude:
         - "**/session.lock"
         - "**/uid.dat"
       max-depth: 100
     - path: "world_nether"
-      name: "nether"
+      name: "地狱"
       exclude:
         - "**/session.lock"
     - path: "world_the_end"
-      name: "the-end"
+      name: "末地"
       exclude:
         - "**/session.lock"
+    # 玩家数据
+    - path: "world/playerdata"
+      name: "玩家背包数据"
+      exclude:
+        - "**/*.lock"
+      max-depth: 10
+    - path: "world/stats"
+      name: "玩家统计数据"
+      exclude:
+        - "**/*.lock"
+      max-depth: 10
+    - path: "world/advancements"
+      name: "玩家进度数据"
+      exclude:
+        - "**/*.lock"
+      max-depth: 10
+    # 插件文件
     - path: "plugins"
-      name: "plugins"
+      name: "所有插件文件"
       exclude:
         - "**/ASPbackup/temp/**"
         - "**/dynmap/web/**"
         - "**/*.log"
       max-depth: 50
+    # 插件配置文件
+    - path: "plugins"
+      name: "插件配置文件"
+      include:
+        - "**/config.yml"
+        - "**/config.yaml"
+        - "**/settings.yml"
+        - "**/*.properties"
+        - "**/*.json"
+        - "**/*.toml"
+        - "**/*.conf"
+      exclude:
+        - "**/ASPbackup/**"
+        - "**/dynmap/web/**"
+      max-depth: 30
 
-  # Global file filtering rules
+  # 全局文件过滤规则
   file-filter:
-    # Glob patterns for files to include
+    # 包含的档案（glob 模式）
     include:
       - "**/*"
-    # Glob patterns for files to exclude
+    # 排除的档案
     exclude:
       - "**/*.tmp"
       - "**/*.lock"
       - "**/*.pid"
-    # Minimum file size in bytes to include (0 = no minimum)
+    # 最小档案大小（位元组），0 = 不限制
     min-size-bytes: 0
-    # Maximum file size in bytes to include (0 = no maximum)
+    # 最大档案大小（位元组），0 = 不限制
     max-size-bytes: 0
 
-  # Backup targets
+  # 备份目标
   targets:
-    # Local target
+    # 本地目标
     - id: "local"
       type: "LOCAL"
       path: "backups/"
-      # Keep only the N most recent backups (0 = keep all)
+      # 保留最近 N 个备份（0 = 保留全部）
       retention-count: 10
-      # Minimum free disk space in MB required before backup
+      # 最少需要可用空间（MB）
       min-free-space-mb: 1024
 
-    # NAS target (mounted network drive) - uncomment to enable
+    # NAS 目标（挂载的网络磁盘）- 取消注释以启用
     # - id: "nas"
     #   type: "NAS"
     #   path: "/mnt/nas/minecraft-backups/"
     #   retention-count: 5
     #   min-free-space-mb: 5120
 
-    # Remote target (distributed transfer) - uncomment to enable
+    # 远端分散式目标 - 取消注释以启用
     # - id: "remote-cluster"
     #   type: "REMOTE"
     #   retention-count: 3
     #   min-free-space-mb: 10240
 
-# --- Scheduled Backups ---
+# --- 定时备份 ---
 schedule:
   enabled: false
-  # Interval in minutes between automatic backups
+  # 自动备份间隔（分钟）
   interval-minutes: 360
-  # Backup type: "full" or "incremental"
+  # 备份类型："full" 或 "incremental"
   backup-type: "full"
-  # Target ID to send scheduled backups to
+  # 目标 ID
   target-id: "local"
-  # Hours during which backups should NOT run (server time, 24h format)
+  # 静默时段（此时间段内不执行备份，24小时制）
   quiet-hours:
     - "02:00-04:00"
 
-# --- Distributed Transfer Settings ---
+# --- 分散式传输设置 ---
 transfer:
-  # Chunk size in KB for splitting files
+  # 分块大小（KB）
   chunk-size-kb: 1024
-  # Number of parallel transfer threads
+  # 并行传输线程数
   parallel-threads: 4
-  # Connection timeout in milliseconds
+  # 连线超时（毫秒）
   connect-timeout-ms: 10000
-  # Read timeout in milliseconds
+  # 读取超时（毫秒）
   read-timeout-ms: 30000
-  # Number of retry attempts for failed chunks
+  # 失败重试次数
   retry-count: 3
-  # Delay between retries in milliseconds
+  # 重试间隔（毫秒）
   retry-delay-ms: 5000
-  # Load balancing strategy: "round_robin" or "least_loaded"
+  # 负载均衡策略："round_robin" 或 "least_loaded"
   load-balance-strategy: "least_loaded"
 
-  # Transfer nodes (receiver applications) - uncomment to configure
+  # 传输节点（接收端应用）- 取消注释以配置
   nodes: []
     # - id: "node-1"
     #   host: "192.168.1.101"
@@ -132,31 +165,31 @@ transfer:
     #   enabled: true
     #   weight: 1
 
-# --- Resume / Checkpoint Settings ---
+# --- 断点续传设置 ---
 checkpoint:
-  # Enable checkpoint/resume support
+  # 启用断点续传
   enabled: true
-  # Directory for storing checkpoint files
+  # 检查点储存目录
   directory: "plugins/ASPbackup/checkpoints"
-  # Auto-clean checkpoints older than this many days
+  # 自动清理超过 N 天的检查点
   max-age-days: 7
 
-# --- Logging Settings ---
+# --- 日志设置 ---
 logging:
-  # Log level: "DEBUG", "INFO", "WARN", "ERROR"
+  # 日志级别："DEBUG"、"INFO"、"WARN"、"ERROR"
   level: "INFO"
-  # Directory for log files
+  # 日志目录
   directory: "plugins/ASPbackup/logs"
-  # Keep logs for this many days
+  # 保留天数
   retention-days: 30
-  # Log transfer details (chunk-level)
+  # 详细传输日志（记录每个分块的传输状态）
   verbose-transfer: false
-  # Log to console in addition to file
+  # 同时输出到控制台
   console-output: true
 
-# --- Disk Space Monitoring ---
+# --- 磁盘空间监控 ---
 disk-space:
-  # Warn when free space on source drive drops below this percentage
+  # 可用空间低于此百分比时警告
   warn-threshold-percent: 15
-  # Check interval in seconds
+  # 检查间隔（秒）
   check-interval-seconds: 300
