@@ -10,6 +10,8 @@ backup:
   auto-on-shutdown: true
   # 启动备份延迟秒数（让伺服器稳定后再执行备份）
   start-delay-seconds: 10
+  # 阻塞式备份超时秒数（防止远端传输失败时阻塞伺服器）
+  blocking-timeout-seconds: 300
   # 暂存目录（压缩中的备份档）
   temp-directory: "plugins/ASPbackup/temp"
   # 单次备份最大大小（MB），0 = 无限制

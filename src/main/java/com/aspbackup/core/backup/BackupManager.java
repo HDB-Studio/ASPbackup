@@ -61,7 +61,7 @@ public class BackupManager {
     }
 
     /**
-     * 同步启动备份操作（阻塞当前线程直到备份完成）。
+     * 同步启动备份操作（阻塞当前线程直到备份完成或超时）。
      * 用于启动和关闭时的自动备份，确保备份完成后再继续流程。
      * 调用者必须在主线程，saveWorldData 需要在主线程执行。
      */
@@ -76,9 +76,16 @@ public class BackupManager {
         // 在主线程保存世界数据（必须在提交到后台线程之前，避免死锁）
         saveWorldData();
 
+        // 阻塞超时时间：启动备份 5 分钟，关闭备份 3 分钟
+        int timeoutSec = plugin.getConfigManager().getBackupConfig().getBlockingTimeoutSeconds();
         Future<?> future = backupExecutor.submit(() -> executeBackup(task));
         try {
-            future.get(); // 阻塞等待备份完成
+            future.get(timeoutSec, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            plugin.getLogger().warning("备份超时（" + timeoutSec + "秒），取消任务：" + taskId);
+            task.setState(BackupState.CANCELLED);
+            future.cancel(true);
+            activeTasks.remove(taskId);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             plugin.getLogger().warning("备份被中断");

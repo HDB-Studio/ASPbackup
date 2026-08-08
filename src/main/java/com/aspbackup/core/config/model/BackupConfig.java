@@ -11,6 +11,7 @@ public class BackupConfig {
     private boolean autoOnStart = true;
     private boolean autoOnShutdown = true;
     private int startDelaySeconds = 30;
+    private int blockingTimeoutSeconds = 300;
     private String tempDirectory = "plugins/ASPbackup/temp";
     private long maxBackupSizeMb = 0;
     private boolean verifyAfterBackup = true;
@@ -29,6 +30,9 @@ public class BackupConfig {
 
     public int getStartDelaySeconds() { return startDelaySeconds; }
     public void setStartDelaySeconds(int startDelaySeconds) { this.startDelaySeconds = startDelaySeconds; }
+
+    public int getBlockingTimeoutSeconds() { return blockingTimeoutSeconds; }
+    public void setBlockingTimeoutSeconds(int blockingTimeoutSeconds) { this.blockingTimeoutSeconds = blockingTimeoutSeconds; }
 
     public String getTempDirectory() { return tempDirectory; }
     public void setTempDirectory(String tempDirectory) { this.tempDirectory = tempDirectory; }
