@@ -42,7 +42,8 @@ public class NodeConnection implements Closeable {
         packet.write(out);
         out.flush();
 
-        // 读取握手 ACK（4 字节 int，0 = 成功）
+        // 读取长度前缀（4 字节），然后读取 ACK（4 字节 int，0 = 成功）
+        int frameLen = in.readInt();
         int ack = in.readInt();
         if (ack != 0) {
             throw new IOException("握手失败，接收端返回错误码：" + ack);

@@ -129,6 +129,11 @@ public class RemoteBackupTarget implements BackupTarget {
         byte[] taskIdBytes = taskId.getBytes(StandardCharsets.UTF_8);
         byte[] checksumBytes = checksum.getBytes(StandardCharsets.UTF_8);
 
+        // 计算payload长度
+        int payloadSize = 2 + taskIdBytes.length + 8 + 8 + 8 + 4 + 2 + checksumBytes.length + data.length;
+
+        // 4字节长度前缀（与Netty LengthFieldBasedFrameDecoder兼容）
+        out.writeInt(payloadSize);
         // 任务 ID 长度 + 任务 ID
         out.writeShort(taskIdBytes.length);
         out.write(taskIdBytes);
@@ -152,6 +157,8 @@ public class RemoteBackupTarget implements BackupTarget {
     private boolean readChunkAck(NodeConnection conn, long expectedChunkIndex) throws IOException {
         DataInputStream in = conn.getInputStream();
 
+        int frameLen = in.readInt(); // 读取长度前缀
+
         int taskIdLen = in.readUnsignedShort();
         byte[] taskIdBytes = new byte[taskIdLen];
         in.readFully(taskIdBytes);
@@ -173,6 +180,8 @@ public class RemoteBackupTarget implements BackupTarget {
 
     private void readCompletionAck(NodeConnection conn) throws IOException {
         DataInputStream in = conn.getInputStream();
+
+        int frameLen = in.readInt(); // 读取长度前缀
 
         int taskIdLen = in.readUnsignedShort();
         byte[] taskIdBytes = new byte[taskIdLen];
