@@ -14,7 +14,7 @@ output-dir: "received-backups"
 
 # 认证令牌（需与发送端 config.yml 中 transfer.nodes 的 auth-token 一致）
 # 预设值 "change-me" 允许跳过认证，生产环境请务必修改！
-auth-token: "change-me"
+auth-token: "101010"
 
 # 日志配置
 logging:

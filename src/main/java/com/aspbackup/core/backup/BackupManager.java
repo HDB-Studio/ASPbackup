@@ -42,6 +42,7 @@ public class BackupManager {
 
     /**
      * 异步启动备份操作。
+     * 调用者必须在主线程，saveWorldData 需要在主线程执行。
      */
     public String startBackup(BackupType type, String targetId) {
         String taskId = UUID.randomUUID().toString().substring(0, 8);
@@ -49,6 +50,9 @@ public class BackupManager {
         activeTasks.put(taskId, task);
 
         plugin.getBackupLogger().logBackupStart(taskId, type.name(), "N/A", targetId);
+
+        // 在主线程保存世界数据（此方法从命令处理器调用，已在主线程）
+        saveWorldData();
 
         backupExecutor.submit(() -> executeBackup(task));
 
@@ -58,6 +62,7 @@ public class BackupManager {
     /**
      * 同步启动备份操作（阻塞当前线程直到备份完成）。
      * 用于启动和关闭时的自动备份，确保备份完成后再继续流程。
+     * 调用者必须在主线程，saveWorldData 需要在主线程执行。
      */
     public String startBackupBlocking(BackupType type, String targetId) {
         String taskId = UUID.randomUUID().toString().substring(0, 8);
@@ -66,6 +71,9 @@ public class BackupManager {
 
         plugin.getLogger().info("开始执行阻塞式备份...");
         plugin.getBackupLogger().logBackupStart(taskId, type.name(), "N/A", targetId);
+
+        // 在主线程保存世界数据（必须在提交到后台线程之前，避免死锁）
+        saveWorldData();
 
         Future<?> future = backupExecutor.submit(() -> executeBackup(task));
         try {
@@ -118,11 +126,6 @@ public class BackupManager {
 
         try {
             BackupConfig config = plugin.getConfigManager().getBackupConfig();
-
-            // 阶段0：保存世界数据（关闭自动保存 → 强制保存 → 重新开启）
-            task.setState(BackupState.COLLECTING);
-            plugin.getLogger().info("正在保存世界数据...");
-            saveWorldData();
 
             // 阶段1：查找目标
             BackupTarget target = findTarget(task.getTargetId());
@@ -242,32 +245,25 @@ public class BackupManager {
 
     /**
      * 保存世界数据：关闭自动保存 → 强制保存 → 重新开启自动保存。
-     * 必须在主线程执行，确保备份时世界数据是最新且一致的。
+     * 必须在主线程调用！直接执行命令，不调度。
      */
-    private void saveWorldData() {
-        try {
-            // 必须在主线程执行
-            plugin.getServer().getScheduler().callSyncMethod(plugin, () -> {
-                // 1. 关闭自动保存
-                plugin.getServer().dispatchCommand(
-                        plugin.getServer().getConsoleSender(), "save-off");
-                plugin.getLogger().info("已关闭自动保存。");
+    public void saveWorldData() {
+        plugin.getLogger().info("正在保存世界数据...");
 
-                // 2. 强制保存所有数据
-                plugin.getServer().dispatchCommand(
-                        plugin.getServer().getConsoleSender(), "save-all");
-                plugin.getLogger().info("已强制保存所有世界数据。");
+        // 1. 关闭自动保存
+        plugin.getServer().dispatchCommand(
+                plugin.getServer().getConsoleSender(), "save-off");
+        plugin.getLogger().info("已关闭自动保存。");
 
-                // 3. 重新开启自动保存
-                plugin.getServer().dispatchCommand(
-                        plugin.getServer().getConsoleSender(), "save-on");
-                plugin.getLogger().info("已重新开启自动保存。");
+        // 2. 强制保存所有数据
+        plugin.getServer().dispatchCommand(
+                plugin.getServer().getConsoleSender(), "save-all");
+        plugin.getLogger().info("已强制保存所有世界数据。");
 
-                return null;
-            }).get(); // 阻塞等待保存完成
-        } catch (Exception e) {
-            plugin.getLogger().warning("保存世界数据时出错：" + e.getMessage());
-        }
+        // 3. 重新开启自动保存
+        plugin.getServer().dispatchCommand(
+                plugin.getServer().getConsoleSender(), "save-on");
+        plugin.getLogger().info("已重新开启自动保存。");
     }
 
     private BackupTarget findTarget(String targetId) {
