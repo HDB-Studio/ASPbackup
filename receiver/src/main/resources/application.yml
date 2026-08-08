@@ -1,0 +1,26 @@
+# ============================================================
+# ASPbackup 备份接收端 — 配置文件 (application.yml)
+# ============================================================
+# 将此文件放在与 ASPbackup-receiver.jar 相同的目录下。
+# 启动命令：java -jar ASPbackup-receiver.jar
+# 命令行参数会覆盖此配置文件中的对应设置。
+# ============================================================
+
+# 监听端口
+port: 9876
+
+# 备份输出目录（接收到的备份档案将保存在此目录下）
+output-dir: "received-backups"
+
+# 认证令牌（需与发送端 config.yml 中 transfer.nodes 的 auth-token 一致）
+# 预设值 "change-me" 允许跳过认证，生产环境请务必修改！
+auth-token: "change-me"
+
+# 日志配置
+logging:
+  # 日志级别：DEBUG / INFO / WARN / ERROR
+  level: "INFO"
+  # 日志输出目录
+  directory: "logs"
+  # 日志保留天数
+  retention-days: 30

@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.logging.Logger;
 
 /**
- * Receives and buffers chunks, then assembles them into a complete file.
+ * 接收并缓冲分块数据，供后续组装使用。
  */
 public class ChunkReceiver {
 
-    private static final Logger LOGGER = Logger.getLogger("ASPbackup-Receiver");
+    private static final Logger LOGGER = Logger.getLogger("ASPbackup-接收端");
 
     private final Path taskDir;
 
@@ -21,7 +21,7 @@ public class ChunkReceiver {
     }
 
     /**
-     * Receive a chunk and write it to a temporary file.
+     * 接收一个分块并写入暂存档。
      */
     public void receiveChunk(long chunkIndex, byte[] data) throws IOException {
         Files.createDirectories(taskDir);
@@ -31,7 +31,7 @@ public class ChunkReceiver {
     }
 
     /**
-     * Get the list of all chunk files, sorted by index.
+     * 获取所有分块文件列表，按索引排序。
      */
     public List<Path> getChunkFiles() throws IOException {
         List<Path> chunks = new ArrayList<>();
@@ -45,7 +45,7 @@ public class ChunkReceiver {
     }
 
     /**
-     * Check if all chunks for a given total have been received.
+     * 检查是否已接收所有分块。
      */
     public boolean isComplete(long totalChunks) throws IOException {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(taskDir, "chunk_*.part")) {
@@ -56,7 +56,7 @@ public class ChunkReceiver {
     }
 
     /**
-     * Clean up chunk files after assembly.
+     * 组装完成后清理所有分块暂存档。
      */
     public void cleanup() throws IOException {
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(taskDir, "chunk_*.part")) {
@@ -64,5 +64,6 @@ public class ChunkReceiver {
                 Files.delete(file);
             }
         }
+        LOGGER.fine("分块暂存档已清理：" + taskDir);
     }
 }

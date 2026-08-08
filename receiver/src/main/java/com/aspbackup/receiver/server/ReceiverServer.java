@@ -12,12 +12,12 @@ import java.nio.file.Path;
 import java.util.logging.Logger;
 
 /**
- * Netty-based TCP server that accepts connections from the ASPbackup plugin
- * and handles backup chunk reception.
+ * 基于 Netty 的 TCP 服务器，接受来自 ASPbackup 插件的连线，
+ * 处理备份分块数据的接收与组装。
  */
 public class ReceiverServer {
 
-    private static final Logger LOGGER = Logger.getLogger("ASPbackup-Receiver");
+    private static final Logger LOGGER = Logger.getLogger("ASPbackup-接收端");
 
     private final int port;
     private final Path outputDir;
@@ -34,7 +34,7 @@ public class ReceiverServer {
     }
 
     /**
-     * Start the receiver server.
+     * 启动接收端服务器。
      */
     public void start() throws InterruptedException {
         bossGroup = new NioEventLoopGroup(1);
@@ -47,13 +47,13 @@ public class ReceiverServer {
                     @Override
                     protected void initChannel(SocketChannel ch) {
                         ChannelPipeline pipeline = ch.pipeline();
-                        // Frame decoder: reads the length prefix and extracts the frame
+                        // 帧解码器：读取长度前缀并提取帧
                         pipeline.addLast(new LengthFieldBasedFrameDecoder(
-                                64 * 1024 * 1024, // 64MB max frame
-                                0, 4,              // length field at offset 0, size 4
-                                0, 4));             // strip length header
+                                64 * 1024 * 1024, // 最大帧 64MB
+                                0, 4,              // 长度字段偏移 0，大小 4 字节
+                                0, 4));             // 跳过长度头
                         pipeline.addLast(new LengthFieldPrepender(4));
-                        // Custom handler for backup protocol
+                        // 自定义备份协议处理器
                         pipeline.addLast(new ClientHandler(outputDir, authToken));
                     }
                 })
@@ -61,11 +61,11 @@ public class ReceiverServer {
                 .childOption(ChannelOption.TCP_NODELAY, true);
 
         serverChannel = bootstrap.bind(port).sync().channel();
-        LOGGER.info("Receiver server started on port " + port);
+        LOGGER.info("接收端服务器已启动，监听端口 " + port);
     }
 
     /**
-     * Stop the receiver server.
+     * 停止接收端服务器。
      */
     public void stop() {
         if (serverChannel != null) {
@@ -80,7 +80,7 @@ public class ReceiverServer {
     }
 
     /**
-     * Block until the server channel is closed.
+     * 阻塞直到服务器通道关闭。
      */
     public void blockUntilShutdown() throws InterruptedException {
         if (serverChannel != null) {

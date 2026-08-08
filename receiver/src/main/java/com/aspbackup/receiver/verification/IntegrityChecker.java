@@ -9,34 +9,34 @@ import java.security.NoSuchAlgorithmException;
 import java.util.logging.Logger;
 
 /**
- * Verifies the integrity of received backup files using SHA-256.
+ * 使用 SHA-256 校验接收到的备份档案完整性。
  */
 public class IntegrityChecker {
 
-    private static final Logger LOGGER = Logger.getLogger("ASPbackup-Receiver");
+    private static final Logger LOGGER = Logger.getLogger("ASPbackup-接收端");
     private static final int BUFFER_SIZE = 8192;
 
     /**
-     * Verify a file's SHA-256 checksum against an expected value.
+     * 校验文件的 SHA-256 校验和是否与预期值匹配。
      *
-     * @param file             the file to verify
-     * @param expectedChecksum the expected SHA-256 hex string
-     * @return true if checksums match
+     * @param file             要校验的文件
+     * @param expectedChecksum 预期的 SHA-256 十六进制字符串
+     * @return 校验和是否匹配
      */
     public boolean verify(Path file, String expectedChecksum) throws IOException {
         String actual = sha256(file);
         boolean match = actual.equalsIgnoreCase(expectedChecksum);
         if (match) {
-            LOGGER.info("Integrity check PASSED: " + file.getFileName());
+            LOGGER.info("完整性校验通过：" + file.getFileName());
         } else {
-            LOGGER.severe("Integrity check FAILED: " + file.getFileName() +
-                    " (expected=" + expectedChecksum + ", actual=" + actual + ")");
+            LOGGER.severe("完整性校验失败：" + file.getFileName() +
+                    "（预期=" + expectedChecksum + "，实际=" + actual + "）");
         }
         return match;
     }
 
     /**
-     * Compute the SHA-256 hex digest of a file.
+     * 计算文件的 SHA-256 十六进制摘要。
      */
     public String sha256(Path file) throws IOException {
         try {
@@ -50,7 +50,7 @@ public class IntegrityChecker {
             }
             return bytesToHex(digest.digest());
         } catch (NoSuchAlgorithmException e) {
-            throw new IOException("SHA-256 not available", e);
+            throw new IOException("SHA-256 不可用", e);
         }
     }
 
