@@ -153,7 +153,7 @@ public class BackupManager {
                     return;
                 }
 
-                Path sourcePath = plugin.getDataFolder().getParentFile().getParentFile().toPath().resolve(srcDef.getPath());
+                Path sourcePath = getServerRoot().resolve(srcDef.getPath());
                 if (!Files.exists(sourcePath)) {
                     plugin.getLogger().warning("来源路径不存在：" + sourcePath);
                     continue;
@@ -191,7 +191,7 @@ public class BackupManager {
             Compressor.CompressionResult result;
             try (OutputStream fos = Files.newOutputStream(tempFile, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
                 result = getCompressor(config).compress(allFiles, fos,
-                        plugin.getDataFolder().getParentFile().getParentFile().toPath(), config.getCompressionLevel());
+                        getServerRoot(), config.getCompressionLevel());
             }
 
             if (task.isInterrupted()) {
@@ -266,12 +266,20 @@ public class BackupManager {
         plugin.getLogger().info("已重新开启自动保存。");
     }
 
+    /**
+     * 获取服务器根目录路径。
+     * 使用 Bukkit 官方 API，避免相对路径 getParentFile() 返回 null 的问题。
+     */
+    private Path getServerRoot() {
+        return plugin.getServer().getWorldContainer().toPath().toAbsolutePath();
+    }
+
     private BackupTarget findTarget(String targetId) {
         for (var tgt : plugin.getConfigManager().getBackupConfig().getTargets()) {
             if (tgt.getId().equals(targetId)) {
                 return switch (tgt.getType().toUpperCase()) {
                     case "LOCAL" -> {
-                        Path targetPath = plugin.getDataFolder().getParentFile().getParentFile().toPath().resolve(tgt.getPath());
+                        Path targetPath = getServerRoot().resolve(tgt.getPath());
                         yield new LocalBackupTarget(tgt.getId(), targetPath, tgt.getRetentionCount(), plugin.getLogger());
                     }
                     case "NAS" -> {
@@ -303,7 +311,7 @@ public class BackupManager {
     private long estimateRequiredSpace() {
         long total = 0;
         for (var src : plugin.getConfigManager().getBackupConfig().getSources()) {
-            Path sourcePath = plugin.getDataFolder().getParentFile().getParentFile().toPath().resolve(src.getPath());
+            Path sourcePath = getServerRoot().resolve(src.getPath());
             try {
                 if (Files.exists(sourcePath)) {
                     total += Files.walk(sourcePath)
