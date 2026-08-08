@@ -151,19 +151,19 @@ transfer:
   load-balance-strategy: "least_loaded"
 
   # 传输节点（接收端应用）- 取消注释以配置
-  nodes: []
-    # - id: "node-1"
-    #   host: "192.168.1.101"
-    #   port: 9876
-    #   auth-token: "your-secure-token-here"
-    #   enabled: true
-    #   weight: 1
-    # - id: "node-2"
-    #   host: "192.168.1.102"
-    #   port: 9876
-    #   auth-token: "your-secure-token-here"
-    #   enabled: true
-    #   weight: 1
+  # nodes:
+  #   - id: "node-1"
+  #     host: "192.168.1.101"
+  #     port: 9876
+  #     auth-token: "your-secure-token-here"
+  #     enabled: true
+  #     weight: 1
+  #   - id: "node-2"
+  #     host: "192.168.1.102"
+  #     port: 9876
+  #     auth-token: "your-secure-token-here"
+  #     enabled: true
+  #     weight: 1
 
 # --- 断点续传设置 ---
 checkpoint:
