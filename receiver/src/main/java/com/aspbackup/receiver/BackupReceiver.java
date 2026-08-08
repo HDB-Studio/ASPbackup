@@ -3,8 +3,9 @@ package com.aspbackup.receiver;
 import com.aspbackup.receiver.server.ReceiverServer;
 
 import java.nio.file.Path;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.logging.*;
 
 /**
  * ASPbackup 备份接收端 — 主入口。
@@ -22,6 +23,9 @@ public class BackupReceiver {
     private static String authToken = "change-me";
 
     public static void main(String[] args) {
+        // 使用标准 ISO 日期格式
+        configureLogging();
+
         parseArgs(args);
 
         LOGGER.info("============================================");
@@ -72,5 +76,29 @@ public class BackupReceiver {
                     break;
             }
         }
+    }
+
+    /**
+     * 配置日志使用标准 ISO 8601 日期格式：yyyy-MM-dd HH:mm:ss
+     */
+    private static void configureLogging() {
+        Logger rootLogger = Logger.getLogger("");
+        for (Handler handler : rootLogger.getHandlers()) {
+            rootLogger.removeHandler(handler);
+        }
+        ConsoleHandler consoleHandler = new ConsoleHandler();
+        consoleHandler.setFormatter(new Formatter() {
+            private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            @Override
+            public String format(LogRecord record) {
+                return String.format("[%s] [%s] %s: %s%n",
+                        sdf.format(new Date(record.getMillis())),
+                        record.getLevel().getName(),
+                        record.getLoggerName(),
+                        record.getMessage());
+            }
+        });
+        rootLogger.addHandler(consoleHandler);
+        rootLogger.setLevel(Level.INFO);
     }
 }
